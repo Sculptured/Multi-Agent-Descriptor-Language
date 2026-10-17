@@ -42,7 +42,7 @@ into the document after `$ref` resolution, for example `/agents/2/groups/0`.
 3. [Communication](communication.md): protocols, channels, connections, open and closed mode, bans
 4. [Topology](topology.md): the graph, patterns, starting points, loops, conditions, policies
 5. [Conformance](conformance.md): levels, diagnostics, fixtures, security considerations
-6. [Interoperability](interop.md): Sculptured, CAMEL, A2A
+6. [Interoperability](interop.md): Sculptured, CAMEL, A2A, Google ADK, Microsoft Agent Framework
 
 The JSON Schema [`schema/draft/schema.json`](../../schema/draft/schema.json) describes a document
 after `$ref` resolution. Where the schema and this text disagree, this text governs.

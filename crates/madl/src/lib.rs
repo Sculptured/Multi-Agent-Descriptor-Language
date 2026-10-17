@@ -1,4 +1,5 @@
-//! Reader, validator and resolver for the Multi-Agent Descriptor Language (MADL).
+//! Reader, validator and resolver for the Multi-Agent Descriptor Language (MADL), and importers
+//! from other frameworks ([`convert`]).
 //!
 //! ```no_run
 //! let doc = madl::load(std::path::Path::new("team.madl.yaml")).unwrap();

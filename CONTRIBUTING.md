@@ -30,7 +30,7 @@ cargo test --workspace                 # unit tests, examples, conformance fixtu
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all
 UPDATE_SCHEMAS=1 cargo test            # after changing types
-UPDATE_FIXTURES=1 cargo test           # after an intended change to resolve/expand output; review the diff
+UPDATE_FIXTURES=1 cargo test           # after an intended change to resolve/expand or importer output; review the diff
 ```
 
 Functions stay at 30 lines or fewer, files under 300. Tests never call a model or a network
