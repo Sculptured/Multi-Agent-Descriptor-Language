@@ -1,0 +1,2 @@
+approximated GetWeather.yaml#/tools/0: a function: only a runner where the host registers `GetWeather` can call it
+unsupported GetWeather.yaml#/tools/0: the tool's other settings are kept under extensions `com.microsoft.agent-framework` (`tool_args`)

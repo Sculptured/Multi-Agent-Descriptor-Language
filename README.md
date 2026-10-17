@@ -70,6 +70,7 @@ madl resolve  team.madl.yaml      # every agent's effective settings, and where 
 madl expand   team.madl.yaml      # $refs resolved, patterns expanded
 madl graph    team.madl.yaml      # a Mermaid flowchart
 madl import adk ./my_agent        # a Google ADK agent config tree as MADL, with what did not carry over
+madl import maf ./workflow        # Microsoft Agent Framework declarative files as MADL, the same way
 madl schema                       # the JSON Schema
 ```
 
@@ -92,7 +93,7 @@ Editors can validate and complete MADL files with the published schema:
 | [`schema/draft/schema.json`](schema/draft/schema.json) | JSON Schema, generated from the Rust types |
 | [`examples/`](examples) | Pipeline, supervisor workforce, debate, CAD review, textbook fan-out, open team with bans, a document split across files |
 | [`conformance/`](conformance) | Valid and invalid documents with expected error codes, and expected resolver and expander output; every implementation runs them |
-| [`crates/madl`](crates/madl) | The reference implementation: types, loader, validator, resolver, expander, Mermaid, importers (Google ADK) |
+| [`crates/madl`](crates/madl) | The reference implementation: types, loader, validator, resolver, expander, Mermaid, importers (Google ADK, Microsoft Agent Framework) |
 | [`crates/madl-cli`](crates/madl-cli) | The `madl` command |
 | [`bindings/typescript`](bindings/typescript) | Generated TypeScript types |
 | [`docs/design/`](docs/design) | Design records |

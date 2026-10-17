@@ -1,0 +1,31 @@
+kind: Prompt
+name: TechnicalWriter
+displayName: Technical writer
+description: Writes notes for developers.
+instructions: Write release notes for developers, with every breaking change first.
+additionalInstructions: Keep each entry to one line.
+model:
+  id: gpt-4.1
+  provider: AzureOpenAI
+  connection:
+    kind: key
+    endpoint: https://example.openai.azure.com
+    apiKey: sk-not-a-real-key
+tools:
+  - kind: mcp
+    name: tracker
+    url: =Env.TRACKER_URL
+    approvalMode:
+      kind: specify
+      alwaysRequireApprovalTools: [close_issue]
+    allowedTools: [search_issues, close_issue]
+    connection:
+      kind: key
+      apiKey: also-not-real
+  - kind: web_search
+    name: search
+  - kind: code_interpreter
+inputSchema:
+  properties:
+    audience:
+      kind: string

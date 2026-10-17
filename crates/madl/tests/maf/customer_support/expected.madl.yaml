@@ -1,0 +1,223 @@
+madl: draft
+system:
+  id: CustomerSupport
+  name: CustomerSupport
+defaults:
+  preferences:
+    runtime: microsoft-agent-framework
+inputs:
+- id: user-message
+  to:
+  - SelfServiceAgent
+agents:
+- id: SelfServiceAgent
+  outputs:
+  - id: ServiceParameters
+    description: The agent's answer, kept in the workflow variable `Local.ServiceParameters`
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - service_agent
+- id: TicketingAgent
+  outputs:
+  - id: TicketParameters
+    description: The agent's answer, kept in the workflow variable `Local.TicketParameters`
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - ticket_agent
+- id: TicketRoutingAgent
+  outputs:
+  - id: RoutingParameters
+    description: The agent's answer, kept in the workflow variable `Local.RoutingParameters`
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - routing_agent
+- id: WindowsSupportAgent
+  outputs:
+  - id: SupportParameters
+    description: The agent's answer, kept in the workflow variable `Local.SupportParameters`
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - support_agent
+- id: TicketEscalationAgent
+  outputs:
+  - id: EscalationParameters
+    description: The agent's answer, kept in the workflow variable `Local.EscalationParameters`
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - escalate_agent
+- id: TicketResolutionAgent
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - resolution_agent
+channels:
+- id: workflow-variables
+  name: Workflow variables
+  medium: shared-memory
+  access:
+    SelfServiceAgent: read-write
+    TicketEscalationAgent: read-write
+    TicketResolutionAgent: read
+    TicketRoutingAgent: read-write
+    TicketingAgent: read-write
+    WindowsSupportAgent: read-write
+connections:
+- from: SelfServiceAgent
+  to: TicketingAgent
+  kind: handoff
+  extensions:
+    com.microsoft.agent-framework:
+      when: Not(Local.ServiceParameters.IsResolved)
+- from: TicketingAgent
+  to: TicketRoutingAgent
+  kind: handoff
+- from: TicketRoutingAgent
+  to: WindowsSupportAgent
+  kind: handoff
+  extensions:
+    com.microsoft.agent-framework:
+      when: Local.RoutingParameters.TeamName = "Windows Support"
+- from: TicketRoutingAgent
+  to: TicketEscalationAgent
+  kind: handoff
+  extensions:
+    com.microsoft.agent-framework:
+      when: Not(Local.RoutingParameters.TeamName = "Windows Support")
+- from: WindowsSupportAgent
+  to: TicketResolutionAgent
+  kind: handoff
+  extensions:
+    com.microsoft.agent-framework:
+      when: Local.SupportParameters.IsResolved
+- from: WindowsSupportAgent
+  to: TicketEscalationAgent
+  kind: handoff
+  extensions:
+    com.microsoft.agent-framework:
+      when: Not(Local.SupportParameters.IsResolved)
+communication:
+  mode: closed
+extensions:
+  com.microsoft.agent-framework:
+    workflow:
+      kind: Workflow
+      trigger:
+        actions:
+        - agent:
+            name: SelfServiceAgent
+          conversationId: =System.ConversationId
+          id: service_agent
+          input:
+            externalLoop:
+              when: "=Not(Local.ServiceParameters.IsResolved)\n And \n Not(Local.ServiceParameters.NeedsTicket)"
+          kind: InvokeAzureAgent
+          output:
+            responseObject: Local.ServiceParameters
+        - conditions:
+          - actions:
+            - actionId: all_done
+              id: end_when_resolved
+              kind: GotoAction
+            condition: =Local.ServiceParameters.IsResolved
+            id: test_if_resolved
+          id: check_if_resolved
+          kind: ConditionGroup
+        - agent:
+            name: TicketingAgent
+          id: ticket_agent
+          input:
+            arguments:
+              AttemptedResolutionSteps: =Local.ServiceParameters.AttemptedResolutionSteps
+              IssueDescription: =Local.ServiceParameters.IssueDescription
+          kind: InvokeAzureAgent
+          output:
+            responseObject: Local.TicketParameters
+        - id: capture_attempted_resolution
+          kind: SetVariable
+          value: =Local.ServiceParameters.AttemptedResolutionSteps
+          variable: Local.ResolutionSteps
+        - activity: 'Created ticket #{Local.TicketParameters.TicketId}'
+          id: log_ticket
+          kind: SendActivity
+        - agent:
+            name: TicketRoutingAgent
+          id: routing_agent
+          input:
+            messages: =UserMessage(Local.ServiceParameters.IssueDescription)
+          kind: InvokeAzureAgent
+          output:
+            responseObject: Local.RoutingParameters
+        - activity: Routing to {Local.RoutingParameters.TeamName}
+          id: log_route
+          kind: SendActivity
+        - conditions:
+          - actions:
+            - conversationId: Local.SupportConversationId
+              id: conversation_support
+              kind: CreateConversation
+            - agent:
+                name: WindowsSupportAgent
+              conversationId: =Local.SupportConversationId
+              id: support_agent
+              input:
+                arguments:
+                  AttemptedResolutionSteps: =Local.ServiceParameters.AttemptedResolutionSteps
+                  IssueDescription: =Local.ServiceParameters.IssueDescription
+                externalLoop:
+                  when: "=Not(Local.SupportParameters.IsResolved)\n And \n Not(Local.SupportParameters.NeedsEscalation)"
+              kind: InvokeAzureAgent
+              output:
+                autoSend: true
+                responseObject: Local.SupportParameters
+            - id: capture_support_resolution
+              kind: SetVariable
+              value: =Local.SupportParameters.ResolutionSummary
+              variable: Local.ResolutionSteps
+            - conditions:
+              - actions:
+                - agent:
+                    name: TicketResolutionAgent
+                  id: resolution_agent
+                  input:
+                    arguments:
+                      ResolutionSummary: =Local.SupportParameters.ResolutionSummary
+                      TicketId: =Local.TicketParameters.TicketId
+                  kind: InvokeAzureAgent
+                - actionId: all_done
+                  id: end_when_solved
+                  kind: GotoAction
+                condition: =Local.SupportParameters.IsResolved
+                id: handle_if_resolved
+              id: check_resolved
+              kind: ConditionGroup
+            condition: =Local.RoutingParameters.TeamName = "Windows Support"
+            id: route_to_support
+          id: check_routing
+          kind: ConditionGroup
+        - conversationId: Local.EscalationConversationId
+          id: conversation_escalate
+          kind: CreateConversation
+        - agent:
+            name: TicketEscalationAgent
+          conversationId: =Local.EscalationConversationId
+          id: escalate_agent
+          input:
+            arguments:
+              IssueDescription: =Local.ServiceParameters.IssueDescription
+              ResolutionSummary: =Local.ResolutionSteps
+              TicketId: =Local.TicketParameters.TicketId
+            externalLoop:
+              when: =Not(Local.EscalationParameters.IsComplete)
+          kind: InvokeAzureAgent
+          output:
+            autoSend: true
+            responseObject: Local.EscalationParameters
+        - id: all_done
+          kind: EndWorkflow
+        id: workflow_demo
+        kind: OnConversationStart

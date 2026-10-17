@@ -1,0 +1,92 @@
+madl: draft
+system:
+  id: MathChat
+  name: MathChat
+defaults:
+  preferences:
+    runtime: microsoft-agent-framework
+inputs:
+- id: user-message
+  to:
+  - StudentAgent
+agents:
+- id: StudentAgent
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - question_student
+- id: TeacherAgent
+  outputs:
+  - id: TeacherResponse
+    description: The agent's answer, kept in the workflow variable `Local.TeacherResponse`
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - question_teacher
+channels:
+- id: conversation
+  name: The user's conversation
+  medium: shared-memory
+  access:
+    StudentAgent: read-write
+    TeacherAgent: read-write
+- id: workflow-variables
+  name: Workflow variables
+  medium: shared-memory
+  access:
+    TeacherAgent: write
+connections:
+- from: StudentAgent
+  to: TeacherAgent
+  kind: handoff
+- from: TeacherAgent
+  to: StudentAgent
+  kind: handoff
+  extensions:
+    com.microsoft.agent-framework:
+      when: Not(!IsBlank(Find("CONGRATULATIONS", Upper(MessageText(Local.TeacherResponse))))) And (Local.TurnCount < 4)
+communication:
+  mode: closed
+extensions:
+  com.microsoft.agent-framework:
+    workflow:
+      kind: Workflow
+      trigger:
+        actions:
+        - agent:
+            name: StudentAgent
+          conversationId: =System.ConversationId
+          id: question_student
+          kind: InvokeAzureAgent
+        - agent:
+            name: TeacherAgent
+          conversationId: =System.ConversationId
+          id: question_teacher
+          kind: InvokeAzureAgent
+          output:
+            messages: Local.TeacherResponse
+        - id: set_count_increment
+          kind: SetVariable
+          value: =Local.TurnCount + 1
+          variable: Local.TurnCount
+        - conditions:
+          - actions:
+            - activity: GOLD STAR!
+              id: sendActivity_done
+              kind: SendActivity
+            condition: =!IsBlank(Find("CONGRATULATIONS", Upper(MessageText(Local.TeacherResponse))))
+            id: check_turn_done
+          - actions:
+            - actionId: question_student
+              id: goto_student_agent
+              kind: GotoAction
+            condition: =Local.TurnCount < 4
+            id: check_turn_count
+          elseActions:
+          - activity: Let's try again later...
+            id: sendActivity_tired
+            kind: SendActivity
+          id: check_completion
+          kind: ConditionGroup
+        id: workflow_demo
+        kind: OnConversationStart

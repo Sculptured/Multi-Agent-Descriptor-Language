@@ -1,0 +1,130 @@
+madl: draft
+system:
+  id: InputArguments
+  name: InputArguments
+defaults:
+  preferences:
+    runtime: microsoft-agent-framework
+inputs:
+- id: user-message
+  to:
+  - LocationTriageAgent
+agents:
+- id: LocationTriageAgent
+  outputs:
+  - id: TriageResponse
+    description: The agent's answer, kept in the workflow variable `Local.TriageResponse`
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - solicit_input
+- id: LocationCaptureAgent
+  outputs:
+  - id: LocationResponse
+    description: The agent's answer, kept in the workflow variable `Local.LocationResponse`
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - evaluate_location
+- id: LocationAwareAgent
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - location_response
+channels:
+- id: workflow-variables
+  name: Workflow variables
+  medium: shared-memory
+  access:
+    LocationAwareAgent: read
+    LocationCaptureAgent: read-write
+    LocationTriageAgent: read-write
+connections:
+- from: LocationTriageAgent
+  to: LocationCaptureAgent
+  kind: handoff
+- from: LocationCaptureAgent
+  to: LocationAwareAgent
+  kind: handoff
+  extensions:
+    com.microsoft.agent-framework:
+      when: Not(Local.LocationResponse.is_location_defined = false Or Local.LocationResponse.is_location_confirmed = false)
+- from: LocationCaptureAgent
+  to: LocationTriageAgent
+  kind: handoff
+  extensions:
+    com.microsoft.agent-framework:
+      when: Local.LocationResponse.is_location_defined = false Or Local.LocationResponse.is_location_confirmed = false
+communication:
+  mode: closed
+extensions:
+  com.microsoft.agent-framework:
+    workflow:
+      kind: Workflow
+      trigger:
+        actions:
+        - id: set_count_increment
+          kind: SetVariable
+          value: =System.LastMessage
+          variable: Local.InputMessage
+        - agent:
+            name: LocationTriageAgent
+          conversationId: =System.ConversationId
+          id: solicit_input
+          input:
+            messages: =Local.ActionMessage
+          kind: InvokeAzureAgent
+          output:
+            messages: Local.TriageResponse
+        - id: request_requirements
+          kind: RequestExternalInput
+          variable: Local.NextInput
+        - id: set_status_message
+          kind: SetTextVariable
+          value: |-
+            AGENT - {MessageText(Local.TriageResponse)}
+
+            USER - {MessageText(Local.NextInput)}
+          variable: Local.LocationStatusInput
+        - agent:
+            name: LocationCaptureAgent
+          id: evaluate_location
+          input:
+            messages: =UserMessage(Local.LocationStatusInput)
+          kind: InvokeAzureAgent
+          output:
+            responseObject: Local.LocationResponse
+        - conditions:
+          - actions:
+            - id: set_next_message
+              kind: SetVariable
+              value: =AgentMessage(Local.LocationResponse.action)
+              variable: Local.ActionMessage
+            - actionId: solicit_input
+              id: goto_solicit_input
+              kind: GotoAction
+            condition: |-
+              =Local.LocationResponse.is_location_defined = false Or
+               Local.LocationResponse.is_location_confirmed = false
+            id: check_done
+          elseActions: null
+          id: check_completion
+          kind: ConditionGroup
+        - conversationId: Local.LocationConversationId
+          id: conversation_location
+          kind: CreateConversation
+        - agent:
+            name: LocationAwareAgent
+          conversationId: =Local.LocationConversationId
+          id: location_response
+          input:
+            arguments:
+              location: =Local.LocationResponse.place
+            externalLoop:
+              when: =Upper(System.LastMessage.Text) <> "EXIT"
+            messages: =Local.InputMessage
+          kind: InvokeAzureAgent
+          output:
+            autoSend: true
+        id: workflow_demo
+        kind: OnConversationStart

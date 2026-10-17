@@ -1,0 +1,411 @@
+madl: draft
+system:
+  id: DeepResearch
+  name: DeepResearch
+defaults:
+  preferences:
+    runtime: microsoft-agent-framework
+inputs:
+- id: user-message
+  to:
+  - ResearchAgent
+agents:
+- id: ResearchAgent
+  outputs:
+  - id: TaskFacts
+    description: The agent's answer, kept in the workflow variable `Local.TaskFacts`
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - question_UDoMUw
+      - question_wFJ123
+- id: PlannerAgent
+  outputs:
+  - id: Plan
+    description: The agent's answer, kept in the workflow variable `Local.Plan`
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - question_DsBaJU
+      - question_uEJ456
+- id: ManagerAgent
+  outputs:
+  - id: ProgressLedger
+    description: The agent's answer, kept in the workflow variable `Local.ProgressLedger`
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - question_o3BQkf
+- id: SummaryAgent
+  outputs:
+  - id: FinalResponse
+    description: The agent's answer, kept in the workflow variable `Local.FinalResponse`
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - question_Ke3l1d
+- id: question_orsBf06
+  name: Progress Ledger Prompt
+  description: Whichever agent `First(Local.NextSpeaker).name` names when the workflow reaches it
+  outputs:
+  - id: AgentResponse
+    description: The agent's answer, kept in the workflow variable `Local.AgentResponse`
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - question_orsBf06
+channels:
+- id: StatusConversationId
+  name: Conversation `Local.StatusConversationId`
+  medium: shared-memory
+  access:
+    ManagerAgent: read-write
+    PlannerAgent: read-write
+    ResearchAgent: read-write
+- id: TaskConversationId
+  name: Conversation `Local.TaskConversationId`
+  medium: shared-memory
+  access:
+    SummaryAgent: read-write
+    question_orsBf06: read-write
+- id: workflow-variables
+  name: Workflow variables
+  medium: shared-memory
+  access:
+    ManagerAgent: read-write
+    PlannerAgent: read-write
+    ResearchAgent: read-write
+    SummaryAgent: write
+    question_orsBf06: read-write
+connections:
+- from: ResearchAgent
+  to: PlannerAgent
+  kind: handoff
+- from: PlannerAgent
+  to: ManagerAgent
+  kind: handoff
+- from: ManagerAgent
+  to: SummaryAgent
+  kind: handoff
+  extensions:
+    com.microsoft.agent-framework:
+      when: Local.ProgressLedger.is_request_satisfied.answer
+- from: ManagerAgent
+  to: question_orsBf06
+  kind: handoff
+  extensions:
+    com.microsoft.agent-framework:
+      when: (Not(Local.ProgressLedger.is_request_satisfied.answer) And Not(Local.ProgressLedger.is_in_loop.answer || Not(Local.ProgressLedger.is_progress_being_made.answer)) And (CountRows(Local.NextSpeaker) = 1)) Or (Not(Local.ProgressLedger.is_request_satisfied.answer) And (Local.ProgressLedger.is_in_loop.answer || Not(Local.ProgressLedger.is_progress_being_made.answer)) And Not(Local.StallCount > 2) And (CountRows(Local.NextSpeaker) = 1))
+- from: ManagerAgent
+  to: ResearchAgent
+  kind: handoff
+  extensions:
+    com.microsoft.agent-framework:
+      when: Not(Local.ProgressLedger.is_request_satisfied.answer) And (Local.ProgressLedger.is_in_loop.answer || Not(Local.ProgressLedger.is_progress_being_made.answer)) And (Local.StallCount > 2) And Not(Local.RestartCount > 2)
+- from: question_orsBf06
+  to: ManagerAgent
+  kind: handoff
+communication:
+  mode: closed
+extensions:
+  com.microsoft.agent-framework:
+    workflow:
+      kind: Workflow
+      maxTurns: 500
+      trigger:
+        actions:
+        - displayName: List all available agents for this orchestrator
+          id: setVariable_aASlmF
+          kind: SetVariable
+          value: "=[\n    {\n        name: \"WeatherAgent\", \n        description: \"Able to retrieve weather information\"\n    },\n    {\n        name: \"CoderAgent\", \n        description: \"Able to write and execute Python code\"\n    },\n    {\n        name: \"KnowledgeAgent\", \n        description: \"Able to perform generic websearches\"\n    }\n]"
+          variable: Local.AvailableAgents
+        - displayName: Get a summary of all the agents for use in prompts
+          id: setVariable_V6yEbo
+          kind: SetVariable
+          value: |-
+            =Concat(ForAll(Local.AvailableAgents, $"- " & name & $": " & description), Value, "
+            ")
+          variable: Local.TeamDescription
+        - displayName: Set Task
+          id: setVariable_NZ2u0l
+          kind: SetVariable
+          value: =System.LastMessage.Text
+          variable: Local.InputTask
+        - displayName: Set Task
+          id: setVariable_10u2ZN
+          kind: SetVariable
+          value: =UserMessage(Local.InputTask)
+          variable: Local.SeedTask
+        - activity: Analyzing facts...
+          id: sendActivity_yFsbRy
+          kind: SendActivity
+        - conversationId: Local.StatusConversationId
+          id: conversation_1a2b3c
+          kind: CreateConversation
+        - conversationId: Local.TaskConversationId
+          id: conversation_1x2y3z
+          kind: CreateConversation
+        - agent:
+            name: ResearchAgent
+          conversationId: =Local.StatusConversationId
+          displayName: Get Facts
+          id: question_UDoMUw
+          input:
+            messages: =UserMessage(Local.InputTask)
+          kind: InvokeAzureAgent
+          output:
+            messages: Local.TaskFacts
+        - activity: Creating a plan...
+          id: sendActivity_yFsbRz
+          kind: SendActivity
+        - agent:
+            name: PlannerAgent
+          conversationId: =Local.StatusConversationId
+          displayName: Create a Plan
+          id: question_DsBaJU
+          input:
+            arguments:
+              team: =Local.TeamDescription
+          kind: InvokeAzureAgent
+          output:
+            messages: Local.Plan
+        - displayName: Define instructions
+          id: setVariable_Kk2LDL
+          kind: SetTextVariable
+          value: |-
+            # TASK
+            Address the following user request:
+
+            {Local.InputTask}
+
+
+            # TEAM
+            Use the following team to answer this request:
+
+            {Local.TeamDescription}
+
+
+            # FACTS
+            Consider this initial fact sheet:
+
+            {MessageText(Local.TaskFacts)}
+
+
+            # PLAN
+            Here is the plan to follow as best as possible:
+
+            {MessageText(Local.Plan)}
+          variable: Local.TaskInstructions
+        - activity:
+            Local.TaskInstructions: null
+          id: sendActivity_bwNZiM
+          kind: SendActivity
+        - agent:
+            name: ManagerAgent
+          conversationId: =Local.StatusConversationId
+          displayName: Progress Ledger Prompt
+          id: question_o3BQkf
+          input:
+            messages: =UserMessage(Local.AgentResponseText)
+          kind: InvokeAzureAgent
+          output:
+            autoSend: false
+            responseObject: Local.ProgressLedger
+        - conditions:
+          - actions:
+            - activity: Completed! {Local.ProgressLedger.is_request_satisfied.reason}
+              id: sendActivity_kdl3mC
+              kind: SendActivity
+            - agent:
+                name: SummaryAgent
+              conversationId: =Local.TaskConversationId
+              displayName: Generate Response
+              id: question_Ke3l1d
+              kind: InvokeAzureAgent
+              output:
+                autoSend: true
+                messages: Local.FinalResponse
+            - id: end_SVoNSV
+              kind: EndConversation
+            condition: =Local.ProgressLedger.is_request_satisfied.answer
+            displayName: If Done
+            id: conditionItem_fj432c
+          - actions:
+            - displayName: Increase stall count
+              id: setVariable_H5lXdD
+              kind: SetVariable
+              value: =Local.StallCount + 1
+              variable: Local.StallCount
+            - conditions:
+              - actions:
+                - activity:
+                    Local.ProgressLedger.is_in_loop.reason: null
+                  id: sendActivity_fpaNL9
+                  kind: SendActivity
+                condition: =Local.ProgressLedger.is_in_loop.answer
+                displayName: Is Loop
+                id: conditionItem_fpaNL9
+              - actions:
+                - activity:
+                    Local.ProgressLedger.is_progress_being_made.reason: null
+                  id: sendActivity_NnqvXh
+                  kind: SendActivity
+                condition: =Not(Local.ProgressLedger.is_progress_being_made.answer)
+                displayName: Is No Progress
+                id: conditionItem_NnqvXh
+              id: conditionGroup_vBTQd3
+              kind: ConditionGroup
+            - conditions:
+              - actions:
+                - activity: Unable to make sufficient progress...
+                  id: sendActivity_H5lXdD
+                  kind: SendActivity
+                - conditions:
+                  - actions:
+                    - activity: Stopping after attempting {Local.RestartCount} restarts...
+                      id: sendActivity_xKxFUU
+                      kind: SendActivity
+                    - id: end_GHVrFh
+                      kind: EndConversation
+                    condition: =Local.RestartCount > 2
+                    id: conditionItem_EXAlhZ
+                  id: conditionGroup_4s1Z27
+                  kind: ConditionGroup
+                - activity: Re-analyzing facts...
+                  id: sendActivity_cwNZiM
+                  kind: SendActivity
+                - agent:
+                    name: ResearchAgent
+                  conversationId: =Local.StatusConversationId
+                  displayName: Get New Facts Prompt
+                  id: question_wFJ123
+                  input:
+                    messages: "=UserMessage(\n  \"It's clear we aren't making as much progress as we would like, but we may have learned something new.\n   Please rewrite the following fact sheet, updating it to include anything new we have learned that may be helpful. \n   Example edits can include (but are not limited to) adding new guesses, moving educated guesses to verified facts if appropriate, etc. \n   Updates may be made to any section of the fact sheet, and more than one section of the fact sheet can be edited. \n   This is an especially good time to update educated guesses, so please at least add or update one educated guess or hunch, and explain your reasoning.\n\n   Here is the old fact sheet:\n\n   {MessageText(Local.TaskFacts)}\""
+                  kind: InvokeAzureAgent
+                  output:
+                    messages: Local.TaskFacts
+                - activity: Re-analyzing plan...
+                  id: sendActivity_dsBaJU
+                  kind: SendActivity
+                - agent:
+                    name: PlannerAgent
+                  conversationId: =Local.StatusConversationId
+                  displayName: Create new Plan Prompt
+                  id: question_uEJ456
+                  input:
+                    arguments:
+                      team: =Local.TeamDescription
+                    messages: |-
+                      =UserMessage(
+                         "Please briefly explain what went wrong on this last run (the root cause of the failure),
+                          and then come up with a new plan that takes steps and/or includes hints to overcome prior challenges and especially avoids repeating the same mistakes.
+                          As before, the new plan should be concise, be expressed in bullet-point form, and only involve the team members already described
+                          (do not involve any other outside people since we cannot contact anyone else).")
+                  kind: InvokeAzureAgent
+                  output:
+                    messages: Local.Plan
+                - displayName: Set Plan as Context
+                  id: setVariable_jW7tmM
+                  kind: SetTextVariable
+                  value: |-
+                    # TASK
+                    Address the following user request:
+
+                    {Local.InputTask}
+
+
+                    # TEAM
+                    Use the following team to answer this request:
+
+                    {Local.TeamDescription}
+
+
+                    # FACTS
+                    Consider this initial fact sheet:
+
+                    {MessageText(Local.TaskFacts)}
+
+
+                    # PLAN
+                    Here is the plan to follow as best as possible:
+
+                    {MessageText(Local.Plan)}
+                  variable: Local.TaskInstructions
+                - displayName: Reset Stall count
+                  id: setVariable_6J2snP
+                  kind: SetVariable
+                  value: 0
+                  variable: Local.StallCount
+                - displayName: Increase Restart count
+                  id: setVariable_S6HCgh
+                  kind: SetVariable
+                  value: =Local.RestartCount + 1
+                  variable: Local.RestartCount
+                - actionId: question_o3BQkf
+                  id: goto_LzfJ8u
+                  kind: GotoAction
+                condition: =Local.StallCount > 2
+                displayName: Stall Count Exceeded
+                id: conditionItem_NlQTBv
+              id: conditionGroup_xzNrdM
+              kind: ConditionGroup
+            condition: =Local.ProgressLedger.is_in_loop.answer || Not(Local.ProgressLedger.is_progress_being_made.answer)
+            displayName: If Stalling
+            id: conditionItem_yiqund
+          elseActions:
+          - activity: |-
+              ({Local.ProgressLedger.next_speaker.reason})
+
+              {Local.ProgressLedger.next_speaker.answer} - {Local.ProgressLedger.instruction_or_question.answer}
+            id: sendActivity_L7ooQO
+            kind: SendActivity
+          id: conditionGroup_mVIecC
+          kind: ConditionGroup
+        - id: setVariable_nxN1mE
+          kind: SetVariable
+          value: =Search(Local.AvailableAgents, Local.ProgressLedger.next_speaker.answer, name)
+          variable: Local.NextSpeaker
+        - conditions:
+          - actions:
+            - id: setVariable_L7ooQO
+              kind: SetVariable
+              value: 0
+              variable: Local.StallCount
+            - agent:
+                name: =First(Local.NextSpeaker).name
+              conversationId: =Local.TaskConversationId
+              displayName: Progress Ledger Prompt
+              id: question_orsBf06
+              input:
+                messages: =UserMessage(Local.ProgressLedger.instruction_or_question.answer)
+              kind: InvokeAzureAgent
+              output:
+                autoSend: true
+                messages: Local.AgentResponse
+            - id: setVariable_XzNrdM
+              kind: SetVariable
+              value: =MessageText(Local.AgentResponse)
+              variable: Local.AgentResponseText
+            - displayName: Clear seed task
+              id: setVariable_8eIx2A
+              kind: ResetVariable
+              variable: Local.SeedTask
+            condition: =CountRows(Local.NextSpeaker) = 1
+            displayName: If next Agent tool Exists
+            id: conditionItem_GmigcU
+          elseActions:
+          - activity: Unable to choose next agent...
+            id: sendActivity_BhcsI7
+            kind: SendActivity
+          - displayName: Increase stall count
+            id: setVariable_BhcsI7
+            kind: SetVariable
+            value: =Local.StallCount + 1
+            variable: Local.StallCount
+          id: conditionGroup_QFPiF5
+          kind: ConditionGroup
+        - actionId: question_o3BQkf
+          id: goto_76Hne8
+          kind: GotoAction
+        id: workflow_demo
+        kind: OnConversationStart

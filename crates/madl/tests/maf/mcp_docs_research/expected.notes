@@ -1,0 +1,4 @@
+approximated McpDocsResearch.yaml#/trigger/actions/0/agent: `QueryPlannerAgent` is defined outside these files; only its place in the workflow was imported
+approximated MicrosoftLearnAgent.yaml#/model/id: the model is chosen when the agent loads (`Env.FOUNDRY_MODEL`), so no model was set
+unsupported MicrosoftLearnAgent.yaml#/model/connection: how to reach the model is kept under extensions `com.microsoft.agent-framework`, which other tools ignore
+approximated McpDocsResearch.yaml#/trigger/actions/2/agent: `CitationReviewerAgent` is defined outside these files; only its place in the workflow was imported

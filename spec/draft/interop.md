@@ -73,3 +73,28 @@ JSON Pointer; what it does not list was kept.
 | `generate_content_config`, `include_contents` | `preferences.options` |
 | agents defined in Python (`code:`), custom agent classes, callbacks, schemas, tool `args` | kept under `extensions.dev.adk`, with a note |
 | the user's message | an input without `text` to the root's first agents |
+
+## Microsoft Agent Framework
+
+`madl import maf <file or folder>` builds a document from
+[Agent Framework](https://github.com/microsoft/agent-framework) declarative files: a workflow
+(`kind: Workflow`, or top-level `actions` as the Python loader accepts), the `kind: Prompt` agents
+it invokes by name, or Prompt agents alone. A folder holds at most one workflow; Prompt agents are
+matched to the workflow's invocations by `name`. The importer reads the YAML and never runs it; it
+lists every part that did not carry over exactly, as for ADK.
+
+| Agent Framework | MADL |
+|---|---|
+| `InvokeAzureAgent` (`agent.name`) | one agent per name, from the Prompt agent of that name when there is one; `runtime: microsoft-agent-framework` in `defaults` |
+| an invocation whose agent is an expression | one agent standing for whichever the expression picks, with a note |
+| the order of actions, `ConditionGroup`, `If`, `GotoAction`, `Foreach`, `BreakLoop`, `ContinueLoop`, `End…` | a `handoff` from each agent to every agent the workflow can run next, past the actions between them; `communication.mode: closed`. A branch's Power Fx condition is kept under the connection's `extensions` (`when`), with a note: MADL's `when` is not Power Fx |
+| `output.messages`, `output.responseObject` | an output named after the variable |
+| `conversationId` shared by several agents; `Local.` variables | a `shared-memory` channel per conversation, and `workflow-variables`, with each agent's access |
+| `OnConversationStart`; workflow `inputs` | an input without `text` to the agents the workflow starts with |
+| Prompt `name`, `displayName`, `description`, `instructions` (+ `additionalInstructions`) | `id`, `name`, `description`, `instructions` |
+| `model.id` with `provider` | `model: <provider>/<id>` (`AzureOpenAI` → `azure-openai`); a model read from the environment (`=Env.X`) is left unset |
+| `model.options`, `model.apiType` | `preferences.options` |
+| `mcp` tools | an `mcp` tool by URL; `allowedTools` becomes `restrictions.tools.allow`, `approvalMode` `restrictions.approvals.required_for` |
+| `function`, `openapi` tools; `web_search`, `file_search`, `code_interpreter` | `builtin: microsoft-agent-framework:<name>`; `…:<kind>` |
+| `Question`, `RequestExternalInput`; workflow-level tool and HTTP calls; variables and messages | not drawn, with a note; the agents before and after are linked directly |
+| `model.connection`, `outputSchema`, `inputSchema`, tool settings, `maxTurns`, the workflow itself | kept under `extensions.com.microsoft.agent-framework`, without secret values written in the files |

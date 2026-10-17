@@ -1,0 +1,3 @@
+approximated Marketing.yaml#/trigger/actions/0/agent: `AnalystAgent` is defined outside these files; only its place in the workflow was imported
+approximated Marketing.yaml#/trigger/actions/1/agent: `WriterAgent` is defined outside these files; only its place in the workflow was imported
+approximated Marketing.yaml#/trigger/actions/2/agent: `EditorAgent` is defined outside these files; only its place in the workflow was imported

@@ -1,0 +1,67 @@
+madl: draft
+system:
+  id: Marketing
+  name: Marketing
+defaults:
+  preferences:
+    runtime: microsoft-agent-framework
+inputs:
+- id: user-message
+  to:
+  - AnalystAgent
+agents:
+- id: AnalystAgent
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - invoke_analyst
+- id: WriterAgent
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - invoke_writer
+- id: EditorAgent
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - invoke_editor
+channels:
+- id: conversation
+  name: The user's conversation
+  medium: shared-memory
+  access:
+    AnalystAgent: read-write
+    EditorAgent: read-write
+    WriterAgent: read-write
+connections:
+- from: AnalystAgent
+  to: WriterAgent
+  kind: handoff
+- from: WriterAgent
+  to: EditorAgent
+  kind: handoff
+communication:
+  mode: closed
+extensions:
+  com.microsoft.agent-framework:
+    workflow:
+      kind: Workflow
+      trigger:
+        actions:
+        - agent:
+            name: AnalystAgent
+          conversationId: =System.ConversationId
+          id: invoke_analyst
+          kind: InvokeAzureAgent
+        - agent:
+            name: WriterAgent
+          conversationId: =System.ConversationId
+          id: invoke_writer
+          kind: InvokeAzureAgent
+        - agent:
+            name: EditorAgent
+          conversationId: =System.ConversationId
+          id: invoke_editor
+          kind: InvokeAzureAgent
+        id: workflow_demo
+        kind: OnConversationStart

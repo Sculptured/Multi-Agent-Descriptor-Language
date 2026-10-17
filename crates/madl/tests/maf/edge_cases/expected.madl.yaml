@@ -1,0 +1,193 @@
+madl: draft
+system:
+  id: release-notes
+  name: release-notes
+  description: Drafts release notes for each changed package, then has them reviewed.
+defaults:
+  preferences:
+    runtime: microsoft-agent-framework
+inputs:
+- id: user-message
+  to:
+  - TechnicalWriter
+  - PlainWriter
+agents:
+- id: TechnicalWriter
+  name: Technical writer
+  description: Writes notes for developers.
+  instructions: |-
+    Write release notes for developers, with every breaking change first.
+
+    Keep each entry to one line.
+  model: azure-openai/gpt-4.1
+  tools:
+  - id: tracker
+    mcp: {}
+  - id: search
+    builtin: microsoft-agent-framework:web_search
+  - id: code_interpreter
+    builtin: microsoft-agent-framework:code_interpreter
+  outputs:
+  - id: Draft
+    description: The agent's answer, kept in the workflow variable `Local.Draft`
+  settings:
+    restrictions:
+      tools:
+        allow:
+        - tracker/search_issues
+        - tracker/close_issue
+        - search
+        - code_interpreter
+      approvals:
+        required_for:
+        - tracker/close_issue
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - draft_technical
+      connection:
+        endpoint: https://example.openai.azure.com
+        kind: key
+      inputSchema:
+        properties:
+          audience:
+            kind: string
+      tool_args:
+        tracker:
+          connection:
+            kind: key
+- id: PlainWriter
+  outputs:
+  - id: Draft
+    description: The agent's answer, kept in the workflow variable `Local.Draft`
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - draft_plain
+- id: PackageChecker
+  outputs:
+  - id: Check
+    description: The agent's answer, kept in the workflow variable `Local.Check`
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - check_package
+- id: Reviewer
+  instructions: Check the notes against the changes; ask for changes when something is missing.
+  model: anthropic/claude-sonnet-5-5
+  tools:
+  - id: docs
+    mcp:
+      url: https://example.com/docs/mcp
+  settings:
+    restrictions:
+      approvals:
+        required_for:
+        - docs
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - review
+channels:
+- id: workflow-variables
+  name: Workflow variables
+  medium: shared-memory
+  access:
+    PackageChecker: read-write
+    PlainWriter: write
+    Reviewer: read
+    TechnicalWriter: read-write
+connections:
+- from: TechnicalWriter
+  to: PackageChecker
+  kind: handoff
+  extensions:
+    com.microsoft.agent-framework:
+      when: Not(IsEmpty(inputs.packages))
+- from: TechnicalWriter
+  to: Reviewer
+  kind: handoff
+- from: PlainWriter
+  to: PackageChecker
+  kind: handoff
+  extensions:
+    com.microsoft.agent-framework:
+      when: Not(IsEmpty(inputs.packages))
+- from: PlainWriter
+  to: Reviewer
+  kind: handoff
+- from: PackageChecker
+  to: Reviewer
+  kind: handoff
+communication:
+  mode: closed
+extensions:
+  com.microsoft.agent-framework:
+    workflow:
+      actions:
+      - id: ask_audience
+        kind: Question
+        question:
+          text: Who are the notes for?
+        variable: Local.Audience
+      - condition: =Local.Audience = "developers"
+        else:
+        - agent:
+            name: PlainWriter
+          id: draft_plain
+          kind: InvokeAzureAgent
+          output:
+            messages: Local.Draft
+        id: check_audience
+        kind: If
+        then:
+        - agent:
+            name: TechnicalWriter
+          id: draft_technical
+          input:
+            arguments:
+              audience: =Local.Audience
+          kind: InvokeAzureAgent
+          output:
+            messages: Local.Draft
+      - actions:
+        - agent:
+            name: PackageChecker
+          id: check_package
+          input:
+            messages: =UserMessage(Local.Package)
+          kind: InvokeAzureAgent
+          output:
+            responseObject: Local.Check
+        - condition: =Local.Check.blocking
+          kind: If
+          then:
+          - id: stop_checking
+            kind: BreakLoop
+        id: each_package
+        items: =inputs.packages
+        kind: Foreach
+        value: Local.Package
+      - agent:
+          name: Reviewer
+        id: review
+        input:
+          messages: =UserMessage(Local.Draft)
+        kind: invokeazureagent
+        retries: 2
+      - id: publish
+        kind: InvokeMcpTool
+        serverUrl: https://example.com/mcp
+        toolName: publish_notes
+      - id: log
+        kind: LogTelemetry
+      - actionId: no_such_action
+        id: goto_missing
+        kind: GotoAction
+      description: Drafts release notes for each changed package, then has them reviewed.
+      inputs:
+        packages:
+          description: The packages that changed
+          type: array
+      maxTurns: 40
+      name: release-notes

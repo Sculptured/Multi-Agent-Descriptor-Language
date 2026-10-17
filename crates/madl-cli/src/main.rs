@@ -41,7 +41,8 @@ enum Command {
     Import {
         /// The framework the files come from.
         from: Source,
-        /// For `adk`: a `root_agent.yaml`, or the folder holding it.
+        /// For `adk`: a `root_agent.yaml`, or the folder holding it. For `maf`: a workflow or
+        /// Prompt agent file, or a folder holding one workflow and the Prompt agents it invokes.
         path: PathBuf,
         /// Print the document and the notes as one JSON object.
         #[arg(long)]
@@ -53,6 +54,8 @@ enum Command {
 enum Source {
     /// Google Agent Development Kit agent configs.
     Adk,
+    /// Microsoft Agent Framework declarative workflows and Prompt agents.
+    Maf,
 }
 
 fn main() -> ExitCode {
@@ -68,7 +71,7 @@ fn main() -> ExitCode {
         Command::Graph { file } => {
             checked(&file, &options).map(|doc| print!("{}", madl::mermaid::flowchart(&madl::expand(&doc))))
         }
-        Command::Import { from: Source::Adk, path, json } => import(&path, json),
+        Command::Import { from, path, json } => import(from, &path, json),
         Command::Schema => {
             print!("{}", madl::schema::json());
             Ok(())
@@ -135,8 +138,12 @@ fn print_document(doc: &Document, json: bool) {
 
 /// Prints the imported document and its notes; fails if the source can't be read or the result is
 /// not valid MADL.
-fn import(path: &Path, json: bool) -> Result<(), ()> {
-    let imported = madl::convert::adk::import(path).map_err(|e| eprintln!("{e}"))?;
+fn import(from: Source, path: &Path, json: bool) -> Result<(), ()> {
+    let imported = match from {
+        Source::Adk => madl::convert::adk::import(path),
+        Source::Maf => madl::convert::maf::import(path),
+    };
+    let imported = imported.map_err(|e| eprintln!("{e}"))?;
     if json {
         let both = serde_json::json!({ "document": imported.document, "notes": imported.notes });
         println!("{}", serde_json::to_string_pretty(&both).expect("documents serialise"));

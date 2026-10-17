@@ -1,0 +1,24 @@
+unsupported notes.yml: is not a workflow or a `kind: Prompt` agent; skipped
+approximated workflow.yaml#/inputs: the workflow's named inputs were drawn as one input given at start
+unsupported workflow.yaml#/maxTurns: `maxTurns` has no MADL counterpart; it is kept with the workflow under extensions `com.microsoft.agent-framework`
+unsupported workflow.yaml#/actions/6: goes to `no_such_action`, which no action has; drawn as the end of the workflow
+approximated writers.yaml#/additionalInstructions: `additionalInstructions` were added after `instructions`, separated by a blank line
+unsupported writers.yaml#/model/connection: how to reach the model is kept under extensions `com.microsoft.agent-framework`, which other tools ignore
+unsupported writers.yaml#/model/connection/apiKey: `apiKey` holds a secret value; it was left out
+unsupported writers.yaml#/tools/0/url: the server's URL is not written in the file; the server is not reachable from the document
+unsupported writers.yaml#/tools/0: the tool's other settings are kept under extensions `com.microsoft.agent-framework` (`tool_args`)
+unsupported writers.yaml#/tools/0/connection/apiKey: `apiKey` holds a secret value; it was left out
+unsupported writers.yaml#/inputSchema: `inputSchema` has no MADL counterpart; it is kept under extensions `com.microsoft.agent-framework`, which other tools ignore
+approximated workflow.yaml#/actions/1/elseActions/0/agent: `PlainWriter` is defined outside these files; only its place in the workflow was imported
+approximated workflow.yaml#/actions/2/actions/0/agent: `PackageChecker` is defined outside these files; only its place in the workflow was imported
+unsupported workflow.yaml#/actions/3/retries: `retries` has no MADL counterpart; it is kept with the workflow under extensions `com.microsoft.agent-framework`
+unsupported workflow.yaml#/actions/2/actions/0: runs `PackageChecker` again right after itself; MADL has no connection from an agent to itself
+approximated workflow.yaml#/actions/1/conditions/0/actions/0: work goes from `TechnicalWriter` to `PackageChecker` only when Not(IsEmpty(inputs.packages)) (Power Fx); the condition is kept under extensions `com.microsoft.agent-framework` and the handoff is drawn without it
+approximated workflow.yaml#/actions/1/elseActions/0: work goes from `PlainWriter` to `PackageChecker` only when Not(IsEmpty(inputs.packages)) (Power Fx); the condition is kept under extensions `com.microsoft.agent-framework` and the handoff is drawn without it
+unsupported workflow.yaml#/actions/5: `LogTelemetry` is not an action the importer knows; work passes over it
+unsupported workflow.yaml#/actions/4: `InvokeMcpTool` calls a tool from the workflow itself, outside any agent; not drawn
+approximated workflow.yaml#/actions/0: the workflow waits for the user's answer here; not drawn, so the agents before and after it are linked directly
+unsupported reviewer_again.yaml#: defines `Reviewer` again; the definition in reviewer.yaml was used
+unsupported unused.yaml#: `Translator` is not invoked by the workflow; it was not imported
+approximated workflow.yaml#/actions/1/conditions/0/actions/0: the workflow starts with `TechnicalWriter` only when Local.Audience = "developers" (Power Fx); the input goes to it always
+approximated workflow.yaml#/actions/1/elseActions/0: the workflow starts with `PlainWriter` only when Not(Local.Audience = "developers") (Power Fx); the input goes to it always

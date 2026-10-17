@@ -1,0 +1,4 @@
+approximated MathChat.yaml#/trigger/actions/0/agent: `StudentAgent` is defined outside these files; only its place in the workflow was imported
+approximated MathChat.yaml#/trigger/actions/1/agent: `TeacherAgent` is defined outside these files; only its place in the workflow was imported
+approximated MathChat.yaml#/trigger/actions/1: work goes from `TeacherAgent` to `StudentAgent` only when Not(!IsBlank(Find("CONGRATULATIONS", Upper(MessageText(Local.TeacherResponse))))) And (Local.TurnCount < 4) (Power Fx); the condition is kept under extensions `com.microsoft.agent-framework` and the handoff is drawn without it
+unsupported MathChat.yaml#/trigger/actions: actions that keep variables, send messages or manage conversations (SendActivity ×2, SetVariable ×1) are not drawn; the workflow is kept under extensions `com.microsoft.agent-framework`

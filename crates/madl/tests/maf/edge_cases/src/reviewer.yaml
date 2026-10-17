@@ -1,0 +1,9 @@
+kind: prompt
+name: Reviewer
+instructions: Check the notes against the changes; ask for changes when something is missing.
+model: anthropic/claude-sonnet-5-5
+tools:
+  - kind: mcp
+    name: docs
+    url: https://example.com/docs/mcp
+    approvalMode: always

@@ -1,6 +1,7 @@
 //! Importers: MADL documents built from other frameworks' files, with a note for every part that
 //! did not carry over exactly. What the notes do not mention was kept as it was.
 pub mod adk;
+pub mod maf;
 
 use crate::model::{Connection, ConnectionKind, Document};
 use serde::Serialize;
@@ -72,12 +73,7 @@ impl Builder {
     /// An unused MADL id for a name from the source: characters an id can't hold become `_`,
     /// and a name already used gets `-2`, `-3`…
     pub fn id_for(&mut self, name: &str) -> String {
-        let mut base: String =
-            name.chars().map(|c| if c.is_ascii_alphanumeric() || c == '_' || c == '-' { c } else { '_' }).collect();
-        if !base.starts_with(|c: char| c.is_ascii_alphanumeric()) {
-            base.insert(0, 'a');
-        }
-        base.truncate(60);
+        let base = sanitize(name);
         let mut id = base.clone();
         let mut n = 1;
         while self.taken.contains(&id) {
@@ -101,6 +97,17 @@ impl Builder {
         });
         Some(&mut self.doc.connections[i])
     }
+}
+
+/// `name` as an id: characters an id can't hold become `_`, and it starts with a letter or digit.
+pub(crate) fn sanitize(name: &str) -> String {
+    let mut id: String =
+        name.chars().map(|c| if c.is_ascii_alphanumeric() || c == '_' || c == '-' { c } else { '_' }).collect();
+    if !id.starts_with(|c: char| c.is_ascii_alphanumeric()) {
+        id.insert(0, 'a');
+    }
+    id.truncate(60);
+    id
 }
 
 /// A connection with nothing but its ends and kind.

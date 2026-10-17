@@ -1,0 +1,46 @@
+madl: draft
+system:
+  id: Assistant
+  name: Assistant
+  description: Helpful assistant
+defaults:
+  preferences:
+    runtime: microsoft-agent-framework
+inputs:
+- id: user-message
+  to:
+  - Assistant
+agents:
+- id: Assistant
+  description: Helpful assistant
+  instructions: You are a helpful assistant. You answer questions using the tools provided.
+  tools:
+  - id: GetWeather
+    description: Get the weather for a given location.
+    builtin: microsoft-agent-framework:GetWeather
+  settings:
+    preferences:
+      options:
+        allowMultipleToolCalls: true
+        chatToolMode: auto
+        temperature: 0.9
+        topP: 0.95
+  extensions:
+    com.microsoft.agent-framework:
+      tool_args:
+        GetWeather:
+          bindings:
+            get_weather: get_weather
+          parameters:
+            properties:
+              location:
+                description: The city and state, e.g. San Francisco, CA
+                kind: string
+                required: true
+              unit:
+                description: The unit of temperature. Possible values are 'celsius' and 'fahrenheit'.
+                enum:
+                - celsius
+                - fahrenheit
+                kind: string
+                required: false

@@ -1,0 +1,74 @@
+# Ours, not from the Agent Framework samples: the shapes the samples don't cover.
+name: release-notes
+description: Drafts release notes for each changed package, then has them reviewed.
+inputs:
+  packages:
+    type: array
+    description: The packages that changed
+maxTurns: 40
+actions:
+  - kind: Question
+    id: ask_audience
+    question:
+      text: Who are the notes for?
+    variable: Local.Audience
+
+  - kind: If
+    id: check_audience
+    condition: =Local.Audience = "developers"
+    then:
+      - kind: InvokeAzureAgent
+        id: draft_technical
+        agent:
+          name: TechnicalWriter
+        input:
+          arguments:
+            audience: =Local.Audience
+        output:
+          messages: Local.Draft
+    else:
+      - kind: InvokeAzureAgent
+        id: draft_plain
+        agent:
+          name: PlainWriter
+        output:
+          messages: Local.Draft
+
+  - kind: Foreach
+    id: each_package
+    items: =inputs.packages
+    value: Local.Package
+    actions:
+      - kind: InvokeAzureAgent
+        id: check_package
+        agent:
+          name: PackageChecker
+        input:
+          messages: =UserMessage(Local.Package)
+        output:
+          responseObject: Local.Check
+      - kind: If
+        condition: =Local.Check.blocking
+        then:
+          - kind: BreakLoop
+            id: stop_checking
+
+  - kind: invokeazureagent
+    id: review
+    agent:
+      name: Reviewer
+    input:
+      messages: =UserMessage(Local.Draft)
+    retries: 2
+
+  - kind: InvokeMcpTool
+    id: publish
+    serverUrl: https://example.com/mcp
+    toolName: publish_notes
+
+  - kind: LogTelemetry
+    id: log
+
+  - kind: GotoAction
+    id: goto_missing
+    actionId: no_such_action

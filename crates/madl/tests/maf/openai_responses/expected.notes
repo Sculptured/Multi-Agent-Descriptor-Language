@@ -1,0 +1,2 @@
+unsupported OpenAIResponses.yaml#/model/connection: how to reach the model is kept under extensions `com.microsoft.agent-framework`, which other tools ignore
+unsupported OpenAIResponses.yaml#/outputSchema: `outputSchema` has no MADL counterpart; it is kept under extensions `com.microsoft.agent-framework`, which other tools ignore

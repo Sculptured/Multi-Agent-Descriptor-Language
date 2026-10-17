@@ -1,0 +1,111 @@
+madl: draft
+system:
+  id: McpDocsResearch
+  name: McpDocsResearch
+defaults:
+  preferences:
+    runtime: microsoft-agent-framework
+inputs:
+- id: user-message
+  to:
+  - QueryPlannerAgent
+agents:
+- id: QueryPlannerAgent
+  outputs:
+  - id: PlannedQuery
+    description: The agent's answer, kept in the workflow variable `Local.PlannedQuery`
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - plan_query
+- id: MicrosoftLearnAgent
+  description: Microsoft Learn Agent
+  instructions: You answer questions by searching the Microsoft Learn content only.
+  tools:
+  - id: microsoft_learn
+    description: Get information from Microsoft Learn.
+    mcp:
+      url: https://learn.microsoft.com/api/mcp
+  outputs:
+  - id: DraftAnswer
+    description: The agent's answer, kept in the workflow variable `Local.DraftAnswer`
+  settings:
+    preferences:
+      options:
+        temperature: 0.9
+        topP: 0.95
+    restrictions:
+      tools:
+        allow:
+        - microsoft_learn/microsoft_docs_search
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - search_learn
+      connection:
+        endpoint: =Env.FOUNDRY_PROJECT_ENDPOINT
+        kind: remote
+- id: CitationReviewerAgent
+  extensions:
+    com.microsoft.agent-framework:
+      actions:
+      - review_citations
+channels:
+- id: conversation
+  name: The user's conversation
+  medium: shared-memory
+  access:
+    CitationReviewerAgent: read-write
+    MicrosoftLearnAgent: read-write
+    QueryPlannerAgent: read-write
+- id: workflow-variables
+  name: Workflow variables
+  medium: shared-memory
+  access:
+    CitationReviewerAgent: read
+    MicrosoftLearnAgent: read-write
+    QueryPlannerAgent: write
+connections:
+- from: QueryPlannerAgent
+  to: MicrosoftLearnAgent
+  kind: handoff
+- from: MicrosoftLearnAgent
+  to: CitationReviewerAgent
+  kind: handoff
+communication:
+  mode: closed
+extensions:
+  com.microsoft.agent-framework:
+    workflow:
+      kind: Workflow
+      trigger:
+        actions:
+        - agent:
+            name: QueryPlannerAgent
+          conversationId: =System.ConversationId
+          id: plan_query
+          input:
+            messages: =UserMessage(System.LastMessage.Text)
+          kind: InvokeAzureAgent
+          output:
+            messages: Local.PlannedQuery
+        - agent:
+            name: MicrosoftLearnAgent
+          conversationId: =System.ConversationId
+          id: search_learn
+          input:
+            messages: =UserMessage(MessageText(Local.PlannedQuery))
+          kind: InvokeAzureAgent
+          output:
+            messages: Local.DraftAnswer
+        - agent:
+            name: CitationReviewerAgent
+          conversationId: =System.ConversationId
+          id: review_citations
+          input:
+            messages: =UserMessage(MessageText(Local.DraftAnswer))
+          kind: InvokeAzureAgent
+          output:
+            autoSend: true
+        id: workflow_mcp_docs_research
+        kind: OnConversationStart

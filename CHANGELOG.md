@@ -4,6 +4,11 @@
 
 The first public draft.
 
+- `madl import maf`: builds a document from Microsoft Agent Framework declarative files (a workflow,
+  the `kind: Prompt` agents it invokes, or Prompt agents alone) without running them: a `handoff`
+  from each agent to every agent the workflow can run next, with the branch conditions, variables
+  and actions between agents in the notes.
+
 - `madl import adk`: builds a document from a Google ADK agent config tree (`root_agent.yaml` and
   the files it names) without running Python, and lists every part that was approximated or not
   supported, by source file and JSON Pointer.
