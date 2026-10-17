@@ -36,6 +36,23 @@ enum Command {
     Graph { file: PathBuf },
     /// Print the JSON Schema of a document.
     Schema,
+    /// Build a document from another framework's files. What did not carry over exactly is
+    /// listed on stderr as `approximated` or `unsupported`, with where it is in the source.
+    Import {
+        /// The framework the files come from.
+        from: Source,
+        /// For `adk`: a `root_agent.yaml`, or the folder holding it.
+        path: PathBuf,
+        /// Print the document and the notes as one JSON object.
+        #[arg(long)]
+        json: bool,
+    },
+}
+
+#[derive(Clone, Copy, clap::ValueEnum)]
+enum Source {
+    /// Google Agent Development Kit agent configs.
+    Adk,
 }
 
 fn main() -> ExitCode {
@@ -51,6 +68,7 @@ fn main() -> ExitCode {
         Command::Graph { file } => {
             checked(&file, &options).map(|doc| print!("{}", madl::mermaid::flowchart(&madl::expand(&doc))))
         }
+        Command::Import { from: Source::Adk, path, json } => import(&path, json),
         Command::Schema => {
             print!("{}", madl::schema::json());
             Ok(())
@@ -113,4 +131,24 @@ fn print_document(doc: &Document, json: bool) {
     } else {
         print!("{}", serde_yaml_ng::to_string(doc).expect("documents serialise"));
     }
+}
+
+/// Prints the imported document and its notes; fails if the source can't be read or the result is
+/// not valid MADL.
+fn import(path: &Path, json: bool) -> Result<(), ()> {
+    let imported = madl::convert::adk::import(path).map_err(|e| eprintln!("{e}"))?;
+    if json {
+        let both = serde_json::json!({ "document": imported.document, "notes": imported.notes });
+        println!("{}", serde_json::to_string_pretty(&both).expect("documents serialise"));
+    } else {
+        print_document(&imported.document, false);
+        for note in &imported.notes {
+            eprintln!("{note}");
+        }
+    }
+    let report = madl::validate(&imported.document);
+    for d in report.errors() {
+        eprintln!("imported document: {d}");
+    }
+    if report.is_ok() { Ok(()) } else { Err(()) }
 }

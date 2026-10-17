@@ -1,0 +1,8 @@
+approximated root_agent.yaml#/tools/0: a Python function: only an ADK runner that can import `core_callback_config.tools.roll_die` can call it
+approximated root_agent.yaml#/tools/1: a Python function: only an ADK runner that can import `core_callback_config.tools.check_prime` can call it
+unsupported root_agent.yaml#/after_agent_callbacks: `after_agent_callbacks` has no MADL counterpart; it is kept under extensions `dev.adk`, which other tools ignore
+unsupported root_agent.yaml#/after_model_callbacks: `after_model_callbacks` has no MADL counterpart; it is kept under extensions `dev.adk`, which other tools ignore
+unsupported root_agent.yaml#/after_tool_callbacks: `after_tool_callbacks` has no MADL counterpart; it is kept under extensions `dev.adk`, which other tools ignore
+unsupported root_agent.yaml#/before_agent_callbacks: `before_agent_callbacks` has no MADL counterpart; it is kept under extensions `dev.adk`, which other tools ignore
+unsupported root_agent.yaml#/before_model_callbacks: `before_model_callbacks` has no MADL counterpart; it is kept under extensions `dev.adk`, which other tools ignore
+unsupported root_agent.yaml#/before_tool_callbacks: `before_tool_callbacks` has no MADL counterpart; it is kept under extensions `dev.adk`, which other tools ignore

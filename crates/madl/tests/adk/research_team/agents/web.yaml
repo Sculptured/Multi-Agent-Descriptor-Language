@@ -1,0 +1,6 @@
+name: web
+description: Searches the web.
+instruction: Search the web for the question.
+output_key: web_notes
+tools:
+  - name: google_search

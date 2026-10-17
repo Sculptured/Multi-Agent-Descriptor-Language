@@ -1,0 +1,2 @@
+unsupported root_agent.yaml#/sub_agents/1: `sub_agents_config.life_agent.agent` is an agent defined in Python; only its place in the team was imported
+approximated root_agent.yaml#/sub_agents: ADK hands the whole conversation back when a sub-agent transfers to its parent; drawn as `report`

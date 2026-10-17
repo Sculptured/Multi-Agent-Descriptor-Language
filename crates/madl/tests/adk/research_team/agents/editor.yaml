@@ -1,0 +1,6 @@
+name: editor
+description: Edits the draft.
+instruction: "Improve {draft}; call exit_loop when it reads well."
+output_key: draft
+tools:
+  - name: exit_loop

@@ -1,0 +1,6 @@
+agent_class: ParallelAgent
+name: search
+description: Searches the web and the papers at the same time.
+sub_agents:
+  - config_path: web.yaml
+  - config_path: papers.yaml

@@ -1,0 +1,13 @@
+name: papers
+model: gemini-2.5-flash
+description: Searches papers.
+instruction: Search papers for the question.
+output_key: paper_notes
+tools:
+  - name: McpToolset
+    args:
+      tool_name_prefix: scholar_
+      tool_filter: [search_papers, get_abstract]
+      streamable_http_connection_params:
+        url: https://scholar.example.com/mcp
+  - name: load_web_page

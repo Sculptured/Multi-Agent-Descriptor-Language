@@ -1,0 +1,127 @@
+madl: draft
+system:
+  id: IterativeWritingPipeline
+  name: IterativeWritingPipeline
+  description: Iterative writing pipeline agent.
+defaults:
+  preferences:
+    runtime: google-adk
+inputs:
+- id: user-message
+  to:
+  - InitialWriterAgent
+groups:
+- id: IterativeWritingPipeline
+  purpose: Iterative writing pipeline agent.
+  extensions:
+    dev.adk:
+      agent_class: SequentialAgent
+- id: RefinementLoop
+  purpose: Refinement loop agent.
+  parent: IterativeWritingPipeline
+  extensions:
+    dev.adk:
+      agent_class: LoopAgent
+      max_iterations: 5
+agents:
+- id: InitialWriterAgent
+  description: Writes the initial document draft based on the topic, aiming for some initial substance.
+  instructions: |
+    You are a Creative Writing Assistant tasked with starting a story.
+
+    Write the *first draft* of a short story (aim for 1-2 sentences).
+    Base the content *only* on the topic provided by user. Try to introduce a specific element (like a character, a setting detail, or a starting action) to make it engaging.
+
+    Output *only* the story/document text. Do not add introductions or explanations.
+  model: google/gemini-2.5-flash
+  groups:
+  - IterativeWritingPipeline
+  outputs:
+  - id: current_document
+    description: The agent's final answer, kept in session state as `current_document`
+- id: CriticAgent
+  description: Reviews the current draft, providing critique if clear improvements are needed; otherwise, signals completion.
+  instructions: |
+    You are a Constructive Critic AI reviewing a document draft (typically at least 10 sentences). Your goal is balanced feedback.
+
+    **Document to Review:**
+    ```
+    {{current_document}}
+    ```
+
+    **Task:**
+    Review the document for the following criteria:
+
+    - content length: at least 10 sentences;
+    - clarity: the content must be clear;
+    - engagement: the content should be engaging and relevant to the topic;
+    - basic coherence according to the initial topic (if known).
+
+    IF you identify 1-2 *clear and actionable* ways the document could be improved to better capture the topic or enhance reader engagement (e.g., "Needs a stronger opening sentence", "Clarify the character's goal"):
+    Provide these specific suggestions concisely. Output *only* the critique text.
+
+    ELSE IF the document is coherent, addresses the topic adequately for its length, and has no glaring errors or obvious omissions:
+    Respond *exactly* with the phrase "No major issues found." and nothing else. It doesn't need to be perfect, just functionally complete for this stage. Avoid suggesting purely subjective stylistic preferences if the core is sound.
+
+    Do not add explanations. Output only the critique OR the exact completion phrase.
+
+    IF output the critique, ONLY output JUST ONE aspect each time.
+  model: google/gemini-2.5-pro
+  groups:
+  - RefinementLoop
+  outputs:
+  - id: criticism
+    description: The agent's final answer, kept in session state as `criticism`
+  settings:
+    preferences:
+      options:
+        include_contents: none
+- id: RefinerAgent
+  description: Refines the document based on critique, or calls exit_loop if critique indicates completion.
+  instructions: |
+    You are a Creative Writing Assistant refining a document based on feedback OR exiting the process.
+    **Current Document:**
+    ```
+    {{current_document}}
+    ```
+    **Critique/Suggestions:**
+    {{criticism}}
+
+    **Task:**
+    Analyze the 'Critique/Suggestions'.
+    IF the critique is *exactly* "No major issues found.":
+    You MUST call the 'exit_loop' function. Do not output any text.
+    ELSE (the critique contains actionable feedback):
+    Carefully apply the suggestions to improve the 'Current Document'. Output *only* the refined document text.
+
+    Do not add explanations. Either output the refined document OR call the exit_loop function.
+  model: google/gemini-2.5-flash
+  groups:
+  - RefinementLoop
+  tools:
+  - id: exit_loop
+    builtin: google-adk:exit_loop
+  outputs:
+  - id: current_document
+    description: The agent's final answer, kept in session state as `current_document`
+channels:
+- id: session-state
+  name: ADK session state
+  medium: shared-memory
+  access:
+    CriticAgent: read-write
+    InitialWriterAgent: write
+    RefinerAgent: read-write
+connections:
+- from: CriticAgent
+  to: RefinerAgent
+  kind: handoff
+- from: RefinerAgent
+  to: CriticAgent
+  kind: handoff
+  max_rounds: 5
+- from: InitialWriterAgent
+  to: CriticAgent
+  kind: handoff
+communication:
+  mode: closed

@@ -1,0 +1,4 @@
+approximated root_agent.yaml#/tools/0: a Python function: only an ADK runner that can import `multi_agent_llm_config.example_tool` can call it
+approximated roll_agent.yaml#/tools/0: a Python function: only an ADK runner that can import `multi_agent_llm_config.roll_die` can call it
+approximated prime_agent.yaml#/tools/0: a Python function: only an ADK runner that can import `multi_agent_llm_config.check_prime` can call it
+approximated root_agent.yaml#/sub_agents: ADK hands the whole conversation back when a sub-agent transfers to its parent; drawn as `report`

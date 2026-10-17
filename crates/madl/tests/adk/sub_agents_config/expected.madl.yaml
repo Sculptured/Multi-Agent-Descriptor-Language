@@ -1,0 +1,44 @@
+madl: draft
+system:
+  id: root_agent
+  name: root_agent
+  description: Root agent
+defaults:
+  preferences:
+    runtime: google-adk
+inputs:
+- id: user-message
+  to:
+  - root_agent
+agents:
+- id: root_agent
+  description: Root agent
+  instructions: |
+    If the user query is about life, you should route it to the life sub-agent.
+    If the user query is about work, you should route it to the work sub-agent.
+    If the user query is about anything else, you should answer it yourself.
+  model: google/gemini-2.5-flash
+- id: work_agent
+  description: Work agent
+  instructions: |
+    You are a work agent. You are responsible for answering questions about work.
+  model: google/gemini-2.5-flash
+- id: life_agent
+  extensions:
+    dev.adk:
+      code: sub_agents_config.life_agent.agent
+connections:
+- from: root_agent
+  to: work_agent
+  kind: delegate
+- from: root_agent
+  to: life_agent
+  kind: delegate
+- from: work_agent
+  to: root_agent
+  kind: report
+- from: work_agent
+  to: life_agent
+  kind: handoff
+communication:
+  mode: closed

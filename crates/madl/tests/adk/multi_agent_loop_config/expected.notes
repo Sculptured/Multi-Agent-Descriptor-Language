@@ -1,0 +1,1 @@
+approximated loop_agent.yaml#: ADK also leaves the loop early when an agent escalates (for example with `exit_loop`); MADL has only the round limit

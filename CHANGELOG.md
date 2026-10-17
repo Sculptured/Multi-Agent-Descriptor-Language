@@ -4,6 +4,10 @@
 
 The first public draft.
 
+- `madl import adk`: builds a document from a Google ADK agent config tree (`root_agent.yaml` and
+  the files it names) without running Python, and lists every part that was approximated or not
+  supported, by source file and JSON Pointer.
+
 - MEP 0005: agents take a `description` (how the others see them); an input without `text` is given
   when the run starts; `google-adk` and `microsoft-agent-framework` are known runtimes.
 

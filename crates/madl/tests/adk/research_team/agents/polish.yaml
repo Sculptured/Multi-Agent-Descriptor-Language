@@ -1,0 +1,6 @@
+agent_class: LoopAgent
+name: polish
+description: Polishes the draft until it reads well.
+max_iterations: 3
+sub_agents:
+  - config_path: editor.yaml

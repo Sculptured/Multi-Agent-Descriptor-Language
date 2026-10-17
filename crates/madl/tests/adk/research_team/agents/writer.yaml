@@ -1,0 +1,6 @@
+name: writer
+description: Writes the answer.
+instruction: "Write the answer from {web_notes} and {paper_notes}. Keep {style?} if given."
+output_key: draft
+generate_content_config:
+  temperature: 0.4

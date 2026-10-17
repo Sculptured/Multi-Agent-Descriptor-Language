@@ -1,0 +1,7 @@
+agent_class: SequentialAgent
+name: pipeline
+description: Search in parallel, then write and polish.
+sub_agents:
+  - config_path: search.yaml
+  - config_path: writer.yaml
+  - config_path: polish.yaml

@@ -1,0 +1,35 @@
+madl: draft
+system:
+  id: reimbursement_agent
+  name: reimbursement_agent
+defaults:
+  preferences:
+    runtime: google-adk
+inputs:
+- id: user-message
+  to:
+  - reimbursement_agent
+agents:
+- id: reimbursement_agent
+  instructions: |
+    You are an agent whose job is to handle the reimbursement process for
+        the employees. If the amount is less than $100, you will automatically
+        approve the reimbursement.
+
+        If the amount is greater than $100, you will
+        ask for approval from the manager. If the manager approves, you will
+        call reimburse() to reimburse the amount to the employee. If the manager
+        rejects, you will inform the employee of the rejection.
+  model: google/gemini-2.5-flash
+  tools:
+  - id: reimburse
+    builtin: google-adk:tool_human_in_the_loop_config.tools.reimburse
+  - id: LongRunningFunctionTool
+    builtin: google-adk:LongRunningFunctionTool
+  extensions:
+    dev.adk:
+      tool_args:
+        LongRunningFunctionTool:
+          func: tool_human_in_the_loop_config.tools.ask_for_approval
+communication:
+  mode: closed

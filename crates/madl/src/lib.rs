@@ -7,6 +7,7 @@
 //! let settings = madl::resolve(&madl::expand(&doc));
 //! # let _ = settings;
 //! ```
+pub mod convert;
 pub mod diagnostic;
 pub mod duration;
 pub mod expand;

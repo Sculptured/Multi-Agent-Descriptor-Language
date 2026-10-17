@@ -1,0 +1,7 @@
+name: lead
+model: gemini-2.5-pro
+description: Answers research questions with a team of searchers and a writer.
+instruction: Plan the research, then send it to the pipeline; answer simple questions yourself.
+sub_agents:
+  - config_path: agents/pipeline.yaml
+  - config_path: agents/librarian.yaml

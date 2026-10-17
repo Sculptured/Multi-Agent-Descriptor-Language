@@ -1,0 +1,133 @@
+madl: draft
+system:
+  id: lead
+  name: lead
+  description: Answers research questions with a team of searchers and a writer.
+defaults:
+  preferences:
+    runtime: google-adk
+inputs:
+- id: user-message
+  to:
+  - lead
+groups:
+- id: pipeline
+  purpose: Search in parallel, then write and polish.
+  extensions:
+    dev.adk:
+      agent_class: SequentialAgent
+- id: search
+  purpose: Searches the web and the papers at the same time.
+  parent: pipeline
+  extensions:
+    dev.adk:
+      agent_class: ParallelAgent
+- id: polish
+  purpose: Polishes the draft until it reads well.
+  parent: pipeline
+  extensions:
+    dev.adk:
+      agent_class: LoopAgent
+      max_iterations: 3
+agents:
+- id: lead
+  description: Answers research questions with a team of searchers and a writer.
+  instructions: Plan the research, then send it to the pipeline; answer simple questions yourself.
+  model: google/gemini-2.5-pro
+- id: web
+  description: Searches the web.
+  instructions: Search the web for the question.
+  model: google/gemini-2.5-pro
+  groups:
+  - search
+  tools:
+  - id: google_search
+    builtin: google-adk:google_search
+  outputs:
+  - id: web_notes
+    description: The agent's final answer, kept in session state as `web_notes`
+- id: papers
+  description: Searches papers.
+  instructions: Search papers for the question.
+  model: google/gemini-2.5-flash
+  groups:
+  - search
+  tools:
+  - id: scholar
+    mcp:
+      url: https://scholar.example.com/mcp
+  - id: load_web_page
+    builtin: google-adk:load_web_page
+  outputs:
+  - id: paper_notes
+    description: The agent's final answer, kept in session state as `paper_notes`
+  settings:
+    restrictions:
+      tools:
+        allow:
+        - scholar/search_papers
+        - scholar/get_abstract
+        - load_web_page
+- id: writer
+  description: Writes the answer.
+  instructions: Write the answer from {web_notes} and {paper_notes}. Keep {style?} if given.
+  model: google/gemini-2.5-pro
+  groups:
+  - pipeline
+  outputs:
+  - id: draft
+    description: The agent's final answer, kept in session state as `draft`
+  settings:
+    preferences:
+      options:
+        generate_content_config:
+          temperature: 0.4
+- id: editor
+  description: Edits the draft.
+  instructions: Improve {draft}; call exit_loop when it reads well.
+  model: google/gemini-2.5-pro
+  groups:
+  - polish
+  tools:
+  - id: exit_loop
+    builtin: google-adk:exit_loop
+  outputs:
+  - id: draft
+    description: The agent's final answer, kept in session state as `draft`
+- id: librarian
+  description: Finds sources for the lead.
+  instructions: Find sources the lead asks for, and answer only the lead.
+  model: google/gemini-2.5-pro
+channels:
+- id: session-state
+  name: ADK session state
+  medium: shared-memory
+  access:
+    editor: read-write
+    papers: write
+    web: write
+    writer: read-write
+connections:
+- from: web
+  to: writer
+  kind: handoff
+- from: papers
+  to: writer
+  kind: handoff
+- from: writer
+  to: editor
+  kind: handoff
+- from: lead
+  to: web
+  kind: delegate
+- from: lead
+  to: papers
+  kind: delegate
+- from: lead
+  to: librarian
+  kind: delegate
+- from: librarian
+  to: lead
+  kind: report
+communication:
+  mode: closed

@@ -1,0 +1,1 @@
+approximated root_agent.yaml#/tools/0/args: environment values became secret references (OPENAPI_MCP_HEADERS): documents never hold secret values

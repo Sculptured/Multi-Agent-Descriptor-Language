@@ -1,0 +1,21 @@
+madl: draft
+system:
+  id: working_agent
+  name: working_agent
+  description: Handles all the work.
+defaults:
+  preferences:
+    runtime: google-adk
+inputs:
+- id: user-message
+  to:
+  - working_agent
+agents:
+- id: working_agent
+  description: Handles all the work.
+  extensions:
+    dev.adk:
+      agent_class: core_custom_agent_config.my_agents.MyCustomAgent
+      my_field: my_field_value
+communication:
+  mode: closed

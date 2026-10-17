@@ -1,0 +1,42 @@
+madl: draft
+system:
+  id: research_assistant_agent
+  name: research_assistant_agent
+  description: research assistant agent that can perform web search and summarize the results.
+defaults:
+  preferences:
+    runtime: google-adk
+inputs:
+- id: user-message
+  to:
+  - research_assistant_agent
+agents:
+- id: research_assistant_agent
+  description: research assistant agent that can perform web search and summarize the results.
+  instructions: |
+    You can perform web search and summarize the results.
+    You should always use the web_search_agent to get the latest information.
+    You should always use the summarizer_agent to summarize the results.
+  model: google/gemini-2.5-flash
+- id: web_search_agent
+  description: an agent whose job it is to perform web search and return the results.
+  instructions: You are an agent whose job is to perform web search and return the results.
+  model: google/gemini-2.5-flash
+  tools:
+  - id: google_search
+    builtin: google-adk:google_search
+- id: summarizer_agent
+  description: summarizer agent that can summarize text.
+  instructions: Given a text, summarize it.
+  model: google/gemini-2.5-flash
+connections:
+- from: research_assistant_agent
+  to: web_search_agent
+  kind: delegate
+  mode: sync
+- from: research_assistant_agent
+  to: summarizer_agent
+  kind: delegate
+  mode: sync
+communication:
+  mode: closed

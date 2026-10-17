@@ -1,0 +1,29 @@
+madl: draft
+system:
+  id: notion_agent
+  name: notion_agent
+defaults:
+  preferences:
+    runtime: google-adk
+inputs:
+- id: user-message
+  to:
+  - notion_agent
+agents:
+- id: notion_agent
+  instructions: |
+    You are my workspace assistant. Use the provided tools to read, search, comment on, or create
+    Notion pages. Ask clarifying questions when unsure.
+  model: google/gemini-2.5-flash
+  tools:
+  - id: mcp
+    mcp:
+      command: npx
+      args:
+      - -y
+      - '@notionhq/notion-mcp-server'
+      env:
+        OPENAPI_MCP_HEADERS:
+          secret: OPENAPI_MCP_HEADERS
+communication:
+  mode: closed

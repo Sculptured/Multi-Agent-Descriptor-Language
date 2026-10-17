@@ -1,0 +1,2 @@
+approximated web_search_agent.yaml#: an `AgentTool`: the caller waits for the answer, drawn as `delegate` with `mode: sync`; the called agent never takes over the conversation
+approximated summarizer_agent.yaml#: an `AgentTool`: the caller waits for the answer, drawn as `delegate` with `mode: sync`; the called agent never takes over the conversation

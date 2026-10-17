@@ -1,0 +1,2 @@
+unsupported root_agent.yaml#/my_field: `my_field` has no MADL counterpart; it is kept under extensions `dev.adk`, which other tools ignore
+unsupported root_agent.yaml#/agent_class: `core_custom_agent_config.my_agents.MyCustomAgent` is a custom agent class: how it runs is defined in Python
