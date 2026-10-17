@@ -43,6 +43,8 @@ fault, and a sentence. Tools and fixtures match on the code and pointer; the sen
 | `unreachable` | warning | A step no work reaches |
 | `write-overlap` | warning | Two agents' `data_access.writes` cover the same path |
 | `authority-overlap` | warning | Two agents' `authority` names the same domain |
+| `skill-shape` | error | An embedded skill's name, description or body does not fit the Agent Skills format |
+| `duplicate-skill` | error | An agent has two embedded skills with the same name |
 
 ## Fixtures
 

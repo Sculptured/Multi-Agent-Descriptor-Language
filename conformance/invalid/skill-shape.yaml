@@ -1,0 +1,6 @@
+madl: draft
+system: { id: s, name: S }
+agents:
+  - id: keeper
+    skills:
+      - { name: Money Rules, description: Use for money., body: Decimal only. }

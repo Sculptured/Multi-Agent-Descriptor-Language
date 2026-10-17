@@ -7,6 +7,7 @@ import type { Output } from "./Output";
 import type { Placement } from "./Placement";
 import type { Resume } from "./Resume";
 import type { Settings } from "./Settings";
+import type { SkillRef } from "./SkillRef";
 import type { Subagents } from "./Subagents";
 import type { Tool } from "./Tool";
 import type { Workspace } from "./Workspace";
@@ -45,9 +46,9 @@ groups?: Array<string>,
  */
 tools?: Array<Tool>, 
 /**
- * Skills by path or name.
+ * Skills: a path or name, or the skill itself embedded (`{ name, description, body }`).
  */
-skills?: Array<string>, 
+skills?: Array<SkillRef>, 
 /**
  * Files given to the agent as context, relative to the document.
  */

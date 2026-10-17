@@ -129,7 +129,8 @@ to the group, the group's name and purpose.
 | `endpoint` | For `runtime: remote-a2a`: the agent's A2A endpoint or Agent Card URL; required for that runtime (`remote-needs-endpoint`) |
 | `groups` | Group ids |
 | `tools` | Tools the agent is given: `{ id, mcp: { command, args, env, url } }` or `{ id, builtin: "<runtime>:<name>" }`. Restrictions decide which may be used |
-| `skills`, `context` | Skill paths or names; files given as context |
+| `skills` | Skill paths or names, or embedded skills `{ name, description, body }` in the Agent Skills format (name: lowercase letters, digits and hyphens, at most 64; description: when to use it, at most 1024 characters) |
+| `context` | Files given as context |
 | `workspace` | `folder`, and `copy`: `own` (its own git copy), `shared`, or `per-item` |
 | `placement` | `machine`: properties a machine must have, such as `os` or `name` |
 | `outputs` | `{ id, path, description, acceptance }`: what the agent produces; connections `carry` them. `acceptance`: checks that must all pass for the output to count as done |

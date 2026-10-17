@@ -42,10 +42,10 @@ pub struct Agent {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[ts(as = "Option<Vec<Tool>>", optional)]
     pub tools: Vec<Tool>,
-    /// Skills by path or name.
+    /// Skills: a path or name, or the skill itself embedded (`{ name, description, body }`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[ts(as = "Option<Vec<String>>", optional)]
-    pub skills: Vec<String>,
+    #[ts(as = "Option<Vec<SkillRef>>", optional)]
+    pub skills: Vec<SkillRef>,
     /// Files given to the agent as context, relative to the document.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[ts(as = "Option<Vec<String>>", optional)]
@@ -281,4 +281,25 @@ pub struct SubagentTemplate {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[ts(as = "Option<Vec<Tool>>", optional)]
     pub tools: Vec<Tool>,
+}
+
+/// A skill given to an agent: by path or name, or embedded so the document carries it (MEP 0004).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, JsonSchema, TS)]
+#[serde(untagged)]
+#[ts(export)]
+pub enum SkillRef {
+    /// A path to a skill folder or `SKILL.md`, relative to the document, or a skill's name.
+    Ref(String),
+    Embedded(EmbeddedSkill),
+}
+
+/// A skill in the Agent Skills format: `name` (lowercase letters, digits and hyphens, at most 64),
+/// `description` (when to use it, at most 1024 characters) and `body` (the `SKILL.md` instructions).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, JsonSchema, TS)]
+#[serde(deny_unknown_fields)]
+#[ts(export)]
+pub struct EmbeddedSkill {
+    pub name: String,
+    pub description: String,
+    pub body: String,
 }

@@ -4,6 +4,9 @@
 
 The first public draft.
 
+- MEP 0004: `skills` entries may embed the skill itself (`{ name, description, body }`, the Agent
+  Skills format), so a document carries its skills. New errors `skill-shape` and `duplicate-skill`.
+
 - MEP 0003: agents may declare `data_access` (reads, writes, side effects, rationale) and `authority`
   (the decisions they own, and with `scope` how far across groups they reach); outputs take `acceptance` checks that decide when they are done. New
   warnings `write-overlap` and `authority-overlap`. Ideas from Pact (github.com/wandercom/pact).

@@ -1,0 +1,12 @@
+madl: draft
+system: { id: books, name: Books }
+agents:
+  - id: keeper
+    instructions: Keep the ledger.
+    skills:
+      - skills/house-style
+      - name: money-rules
+        description: Use when handling amounts of money.
+        body: |
+          # Money
+          Amounts are Decimal, never float. Round half-even to cents.

@@ -255,10 +255,10 @@
           ]
         },
         "skills": {
-          "description": "Skills by path or name.",
+          "description": "Skills: a path or name, or the skill itself embedded (`{ name, description, body }`).",
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/SkillRef"
           }
         },
         "subagents": {
@@ -868,6 +868,27 @@
       "enum": [
         "deny",
         "allow"
+      ]
+    },
+    "EmbeddedSkill": {
+      "description": "A skill in the Agent Skills format: `name` (lowercase letters, digits and hyphens, at most 64),\n`description` (when to use it, at most 1024 characters) and `body` (the `SKILL.md` instructions).",
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "description",
+        "body"
       ]
     },
     "EnvValue": {
@@ -1854,6 +1875,18 @@
         }
       },
       "additionalProperties": false
+    },
+    "SkillRef": {
+      "description": "A skill given to an agent: by path or name, or embedded so the document carries it (MEP 0004).",
+      "anyOf": [
+        {
+          "description": "A path to a skill folder or `SKILL.md`, relative to the document, or a skill's name.",
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/EmbeddedSkill"
+        }
+      ]
     },
     "SoftHard": {
       "description": "A limit's soft value (no new work; wrap up) and hard value (stop at once).",
