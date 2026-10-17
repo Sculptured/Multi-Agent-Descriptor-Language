@@ -79,6 +79,9 @@ pub struct System {
 #[ts(export)]
 pub struct Input {
     pub id: String,
+    /// The input itself. Empty or absent: it is given when the run starts.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[ts(as = "Option<String>", optional)]
     pub text: String,
     /// The agents that receive it. Empty: the starting agents.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

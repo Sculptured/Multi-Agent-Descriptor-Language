@@ -9,7 +9,12 @@ use std::fmt::Write;
 pub fn flowchart(doc: &Document) -> String {
     let mut out = String::from("flowchart LR\n");
     for input in &doc.inputs {
-        let text = label(&format!("Input: {}", first_line(&input.text)));
+        let given = if input.text.trim().is_empty() {
+            format!("{} (given at start)", input.id)
+        } else {
+            first_line(&input.text)
+        };
+        let text = label(&format!("Input: {given}"));
         let _ = writeln!(out, "  {}([\"{text}\"])", node(&input.id));
     }
     let rt = runtimes(doc);

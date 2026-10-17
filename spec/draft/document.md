@@ -78,6 +78,10 @@ An input's `to` lists agents, groups or steps; empty means the [starting agents]
 An agent an input names receives the input after its own instructions when the system starts; an
 agent further along receives it with its first handoff.
 
+An input without `text` (or with empty text) is given when the run starts, such as the message a
+person opens a conversation with. A Runner SHOULD ask the person starting the run for it, and MUST
+NOT start the agents it goes to with an empty input in its place.
+
 ## Run budget
 
 `system.budget` is what one run of the whole system may use, every agent and everything they spawn
@@ -124,6 +128,7 @@ to the group, the group's name and purpose.
 | Member | |
 |---|---|
 | `id`, `name` | |
+| `description` | What the agent does, in a sentence or two: how other agents and people see it. A Runner SHOULD give it to the agents connected to this one, so they can choose whom to hand work to |
 | `instructions` | The agent's job: the first message it receives |
 | `runtime`, `model`, `resume` | Shorthand for the same fields of `settings.preferences`; setting both is an error (`shorthand-conflict`) |
 | `endpoint` | For `runtime: remote-a2a`: the agent's A2A endpoint or Agent Card URL; required for that runtime (`remote-needs-endpoint`) |
@@ -141,7 +146,8 @@ to the group, the group's name and purpose.
 | `extensions` | Vendor data |
 
 Runtimes are `claude-code`, `codex`, `camel`, `crewai`, `langgraph`, `openai-agents`, `autogen`,
-`remote-a2a`, `human`, or an extension name `x-<vendor>-<name>` (`unknown-runtime`). `human` makes
+`google-adk`, `microsoft-agent-framework`, `remote-a2a`, `human`, or an extension name
+`x-<vendor>-<name>` (`unknown-runtime`). `human` makes
 a person a participant: people receive handoffs, answer `ask` connections and give approvals.
 
 ### Data access and authority

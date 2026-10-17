@@ -3,8 +3,19 @@ use crate::diagnostic::{Diagnostic, Report};
 use crate::duration;
 use crate::model::{Document, Preferences, Settings};
 
-pub const RUNTIMES: &[&str] =
-    &["claude-code", "codex", "camel", "crewai", "langgraph", "openai-agents", "autogen", "remote-a2a", "human"];
+pub const RUNTIMES: &[&str] = &[
+    "claude-code",
+    "codex",
+    "camel",
+    "crewai",
+    "langgraph",
+    "openai-agents",
+    "autogen",
+    "google-adk",
+    "microsoft-agent-framework",
+    "remote-a2a",
+    "human",
+];
 pub const MEDIUMS: &[&str] = &["direct", "filesystem", "shared-memory", "blackboard", "bus", "git", "tracker", "human"];
 const PROTOCOLS: &[&str] = &["native", "a2a", "mcp"];
 

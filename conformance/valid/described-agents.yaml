@@ -1,0 +1,15 @@
+# MEP 0005: agents with a description, runtimes from other frameworks, an input given at start.
+madl: draft
+system: { id: dice-help, name: Dice help }
+inputs:
+  - { id: user-message, to: [coordinator] }
+agents:
+  - id: coordinator
+    runtime: google-adk
+    description: Greets the user and sends each request to the agent that handles it.
+    instructions: Send dice rolls to roller and prime checks to checker.
+  - { id: roller, runtime: google-adk, description: Rolls dice., instructions: Roll the dice asked for. }
+  - { id: checker, runtime: microsoft-agent-framework, description: Checks whether numbers are prime., instructions: Check each number. }
+connections:
+  - { from: coordinator, to: roller, kind: delegate }
+  - { from: coordinator, to: checker, kind: delegate }

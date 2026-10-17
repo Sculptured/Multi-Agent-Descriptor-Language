@@ -10,8 +10,8 @@ import type { JsonValue } from "./serde_json/JsonValue";
  */
 export type Preferences = { 
 /**
- * `claude-code`, `codex`, `camel`, `crewai`, `langgraph`, `openai-agents`, `remote-a2a`,
- * `human`, or `x-<vendor>-<name>`.
+ * `claude-code`, `codex`, `camel`, `crewai`, `langgraph`, `openai-agents`, `autogen`,
+ * `google-adk`, `microsoft-agent-framework`, `remote-a2a`, `human`, or `x-<vendor>-<name>`.
  */
 runtime?: string, model?: ModelRef, 
 /**

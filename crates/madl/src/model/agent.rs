@@ -14,6 +14,11 @@ pub struct Agent {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub name: Option<String>,
+    /// What the agent does, in a sentence or two: how other agents and people see it when they
+    /// choose whom to hand work to. `instructions` is what the agent itself is told.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub description: Option<String>,
     /// The agent's job, in plain text (often a `$ref` to a Markdown file).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]

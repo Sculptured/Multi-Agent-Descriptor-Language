@@ -3,7 +3,11 @@
 /**
  * Something the system is given when it starts: a goal, links, notes.
  */
-export type Input = { id: string, text: string, 
+export type Input = { id: string, 
+/**
+ * The input itself. Empty or absent: it is given when the run starts.
+ */
+text?: string, 
 /**
  * The agents that receive it. Empty: the starting agents.
  */

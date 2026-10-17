@@ -50,4 +50,4 @@ What CAMEL defines in Python code (custom toolkits, callables) is referenced fro
 
 An agent with `runtime: remote-a2a` has an `endpoint`: its A2A endpoint or Agent Card URL.
 Connections that use `a2a@<version>` travel over A2A. A tool can publish an A2A Agent Card for each
-agent from its name, its instructions' first paragraph and its tools.
+agent from its name, its `description` (else its instructions' first paragraph) and its tools.

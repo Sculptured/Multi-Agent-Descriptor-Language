@@ -18,6 +18,11 @@ import type { JsonValue } from "./serde_json/JsonValue";
  */
 export type Agent = { id: string, name?: string, 
 /**
+ * What the agent does, in a sentence or two: how other agents and people see it when they
+ * choose whom to hand work to. `instructions` is what the agent itself is told.
+ */
+description?: string, 
+/**
  * The agent's job, in plain text (often a `$ref` to a Markdown file).
  */
 instructions?: string, 

@@ -163,6 +163,13 @@
             }
           ]
         },
+        "description": {
+          "description": "What the agent does, in a sentence or two: how other agents and people see it when they\nchoose whom to hand work to. `instructions` is what the agent itself is told.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "endpoint": {
           "description": "For `runtime: remote-a2a`: the agent's A2A endpoint or Agent Card URL.",
           "type": [
@@ -1063,6 +1070,7 @@
           "type": "string"
         },
         "text": {
+          "description": "The input itself. Empty or absent: it is given when the run starts.",
           "type": "string"
         },
         "to": {
@@ -1075,8 +1083,7 @@
       },
       "additionalProperties": false,
       "required": [
-        "id",
-        "text"
+        "id"
       ]
     },
     "Join": {
@@ -1576,7 +1583,7 @@
           ]
         },
         "runtime": {
-          "description": "`claude-code`, `codex`, `camel`, `crewai`, `langgraph`, `openai-agents`, `remote-a2a`,\n`human`, or `x-<vendor>-<name>`.",
+          "description": "`claude-code`, `codex`, `camel`, `crewai`, `langgraph`, `openai-agents`, `autogen`,\n`google-adk`, `microsoft-agent-framework`, `remote-a2a`, `human`, or `x-<vendor>-<name>`.",
           "type": [
             "string",
             "null"

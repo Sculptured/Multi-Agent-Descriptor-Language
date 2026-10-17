@@ -4,6 +4,9 @@
 
 The first public draft.
 
+- MEP 0005: agents take a `description` (how the others see them); an input without `text` is given
+  when the run starts; `google-adk` and `microsoft-agent-framework` are known runtimes.
+
 - MEP 0004: `skills` entries may embed the skill itself (`{ name, description, body }`, the Agent
   Skills format), so a document carries its skills. New errors `skill-shape` and `duplicate-skill`.
 

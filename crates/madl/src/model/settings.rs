@@ -56,8 +56,8 @@ pub enum Reach {
 #[serde(deny_unknown_fields)]
 #[ts(export)]
 pub struct Preferences {
-    /// `claude-code`, `codex`, `camel`, `crewai`, `langgraph`, `openai-agents`, `remote-a2a`,
-    /// `human`, or `x-<vendor>-<name>`.
+    /// `claude-code`, `codex`, `camel`, `crewai`, `langgraph`, `openai-agents`, `autogen`,
+    /// `google-adk`, `microsoft-agent-framework`, `remote-a2a`, `human`, or `x-<vendor>-<name>`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub runtime: Option<String>,
